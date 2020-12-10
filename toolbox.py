@@ -1,6 +1,8 @@
 # -*- encoding: utf-8 -*-
 
-from numpy import pi, sqrt, exp, zeros, fft
+from numpy import pi, sqrt, exp, zeros
+import numpy as np
+from scipy.fft import fft, fftfreq
 from typing import List
 from matplotlib import pyplot as plt
 
@@ -36,39 +38,41 @@ class Probe:
         else:
             print("Can't add more data")
 
-def DispInProc(E: List[float],
-            H: List[float], 
-            p_pos: int, s_pos: int):
+def DispInProc(E: List[float], H: List[float],
+               dx: float, Xmax: int,
+               p_pos: int, s_pos: int, dur):
 
     fig, axs = plt.subplots(nrows=2, ncols=1, sharex=True)
+    x = np.linspace(0.0, Xmax*dx, Xmax)
 
     ax = axs[0]
-    ax.set_xlim([0, len(E)])
     ax.set_ylim([min(E)-0.2, max(E)+0.2])
     ax.set_ylabel('Ez, В/м')
     ax.grid()
     
     
-    ax.plot(E)
-    ax.plot(s_pos, 0, 'ok', p_pos, 0, 'rx')
+    ax.plot(x, E)
+    ax.plot(s_pos*dx, 0, 'ok', p_pos*dx, 0, 'rx')
 
     ax = axs[1]
-    ax.set_xlim([0, len(H)])
+    ax.set_xlim([0, Xmax*dx])
     ax.set_ylim([min(H)-0.02, max(H)+0.02])
-    ax.set_xlabel('x, отсчет')
+    ax.set_xlabel('x, м')
     ax.set_ylabel('Hy, А/м')
     ax.grid()
     
-    ax.plot(H)
+    ax.plot(x, H)
     ax.plot(s_pos, 0, 'ok', p_pos, 0, 'rx')
-    fig.subtitle("Процесс распостранения \
-                  электромагнитной волны")
+    fig.suptitle("Распостранение ЭМ волны" + \
+                 " через\n "+ str(dur*1e6) + \
+                 " мкс от начала моделирования")
     plt.show()
 
-def DispGraphs(probe: Probe, s_pos: int):
+def DispGraphs(probe: Probe, s_pos: int, dt: float, maxTime):
     E = probe.E
     H = probe.H
     p_pos = probe.pos
+    t = np.linspace(0.0, len(E)*dt, len(E))
     fig, axs = plt.subplots(nrows=2, ncols=1, sharex=True)
 
     ax = axs[0]
@@ -77,19 +81,50 @@ def DispGraphs(probe: Probe, s_pos: int):
     ax.grid()
     
     
-    ax.plot(E)
+    ax.plot(t*1e6, E)
 
     ax = axs[1]
-    ax.set_xlim([0, len(H)])
+    ax.set_xlim([0, max(t)*1e6])
     ax.set_ylim([min(H)-0.002, max(H)+0.002])
-    ax.set_xlabel('q, отсчет')
+    ax.set_xlabel('q, мкс')
     ax.set_ylabel('Hy, А/м')
     ax.grid()
     
-    ax.plot(H)
-    fig.subtitle("Временной сигнал, \
-                  зарегистрированный датчиком")
+    ax.plot(t*1e6, H)
+    fig.suptitle("Временной сигнал,"+ \
+    " зарегистрированный датчиком")
     plt.show()
 
 
+def DispSpectrum(probe: Probe, dt, N):
+    E = probe.E
+    H = probe.H
+    
+    Ef = fft(E)
+    E_max = np.abs(max(Ef))
+    Hf = fft(H)
 
+    H_max = np.abs(max(Hf))
+
+    xf = fftfreq(N, dt)
+
+    fig, axs = plt.subplots(nrows=2, ncols=1, sharex=True)
+
+    ax = axs[0]
+    ax.set_ylim([-0.2, 1.2])
+    ax.set_ylabel('${E_m}/{E_{max}}$')
+    ax.grid()
+    ax.plot(xf/1e9, np.abs(Ef/E_max))
+
+    ax = axs[1]
+    ax.set_ylim([-0.2, 1.2])
+    ax.set_xlim([0, max(xf)/1e9])
+    ax.set_ylabel('${H_m}/{H_{max}}$')
+    ax.set_xlabel('f, ГГц')
+    ax.grid() 
+    ax.plot(xf/1e9, np.abs(Hf/H_max))
+    
+
+    fig.suptitle("Нормированный амплитудный спектр\n" \
+    "сигнала, зарегистрированный датчиком")
+    plt.show()

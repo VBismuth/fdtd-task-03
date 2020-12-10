@@ -5,29 +5,37 @@ import toolbox as tlbx
 
 if __name__ == "__main__":
     
+    # Параметры по заданию Вар15
+    X_size = 7.5   # Размер области моделирования, м
+    dx = 1e-3      # Размер ячейки разбиения, м
+    Df = 0.5e+9    # Ширина спектра сигнала, Гц
+
+    sig = 10.0     # Ширина спектра сигнала в отсчетах
+    dt = 1/sig/Df  # Дискрет по времени, с
+   
     # Волновое сопротивление свободного пространства
     W0 = 120.0 * np.pi
 
     # Число Куранта
     Sc = 1.0
 
-    # Время расчета в отсчетах
-    maxTime = 400
+    # Время расчета
+    maxTime = 5000
 
     # Размер области моделирования в отсчетах
-    maxSize = 200
+    maxSize = int(X_size // dx)
 
     # Положение источника в отсчетах
-    sourcePos = 50
+    sourcePos = 1000
 
-    # Датчики для регистрации поля
-    p_pos = 75
+    # Датчики для регистрации поля в отсчетах
+    p_pos = 3000
     probe = tlbx.Probe(p_pos, maxTime)
 
     Ez = np.zeros(maxSize)
     Hy = np.zeros(maxSize)
 
-    source = tlbx.GaussianPlaneWave(30.0, 10.0, Sc)
+    source = tlbx.GaussianPlaneWave(120.0, sig, Sc)
 
     probe.addData(Ez, Hy)
 
@@ -59,8 +67,10 @@ if __name__ == "__main__":
         # Регистрация поля в датчиках
         probe.addData(Ez, Hy)
         
-        if q == 120:
-            tlbx.DispInProc(Ez, Hy, p_pos, sourcePos)
+        if q == int(maxTime/5 * 4):
+            dur = q*dt
+            tlbx.DispInProc(Ez, Hy, dx, maxSize, p_pos, sourcePos, dur)
    
-    tlbx.DispGraphs(probe, sourcePos)
+    tlbx.DispGraphs(probe, sourcePos, dt, maxTime)
+    tlbx.DispSpectrum(probe, dt, maxTime)
     
