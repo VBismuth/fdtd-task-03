@@ -10,8 +10,8 @@ if __name__ == "__main__":
     dx = 1e-3      # Размер ячейки разбиения, м
     Df = 0.5e+9    # Ширина спектра сигнала, Гц
 
-    sig = 10.0     # Ширина спектра сигнала в отсчетах
-    dt = 1/sig/Df  # Дискрет по времени, с
+    sig = 1000.0     # Ширина спектра сигнала в отсчетах
+    dt = 1/(sig*Df)# Дискрет по времени, с
    
     # Волновое сопротивление свободного пространства
     W0 = 120.0 * np.pi
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     Sc = 1.0
 
     # Время расчета
-    maxTime = 5000
+    maxTime = int(sig*50)
 
     # Размер области моделирования в отсчетах
     maxSize = int(X_size // dx)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     Ez = np.zeros(maxSize)
     Hy = np.zeros(maxSize)
 
-    source = tlbx.GaussianPlaneWave(120.0, sig, Sc)
+    source = tlbx.GaussianPlaneWave(sig*4, sig, Sc)
 
     probe.addData(Ez, Hy)
 
@@ -50,7 +50,6 @@ if __name__ == "__main__":
         # Источник возбуждения с использованием метода
         # Total Field / Scattered Field
         Hy[sourcePos - 1] -= (Sc / W0) * source.getE(sourcePos, q)
-        # Hy[sourcePos - 1] -= (Sc / W0) * source.getE(0, q)
         
         # Граничные условия для поля E
         Ez[0] = Ez[1]
@@ -67,10 +66,11 @@ if __name__ == "__main__":
         # Регистрация поля в датчиках
         probe.addData(Ez, Hy)
         
-        if q == int(maxTime/5 * 4):
-            dur = q*dt
+        if q == int(maxTime/17*3 ):
+            dur = q*dt # время от начала моделирования, с
             tlbx.DispInProc(Ez, Hy, dx, maxSize, p_pos, sourcePos, dur)
    
+    # Сигнал, зарегистрированный датчиком, и его нормированная АЧХ
     tlbx.DispGraphs(probe, sourcePos, dt, maxTime)
     tlbx.DispSpectrum(probe, dt, maxTime)
     

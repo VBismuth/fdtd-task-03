@@ -62,6 +62,7 @@ def DispInProc(E: List[float], H: List[float],
     ax.grid()
     
     ax.plot(x, H)
+    ax.plot(s_pos*dx, 0, 'ok', p_pos*dx, 0, 'rx')
     ax.plot(s_pos, 0, 'ok', p_pos, 0, 'rx')
     fig.suptitle("Распостранение ЭМ волны" + \
                  " через\n "+ str(dur*1e6) + \
@@ -112,14 +113,14 @@ def DispSpectrum(probe: Probe, dt, N):
 
     ax = axs[0]
     ax.set_ylim([-0.2, 1.2])
-    ax.set_ylabel('${E_m}/{E_{max}}$')
+    ax.set_ylabel('$|{E_m}/{E_{m max}}|$')
     ax.grid()
     ax.plot(xf/1e9, np.abs(Ef/E_max))
 
     ax = axs[1]
     ax.set_ylim([-0.2, 1.2])
     ax.set_xlim([0, max(xf)/1e9])
-    ax.set_ylabel('${H_m}/{H_{max}}$')
+    ax.set_ylabel('$|{H_m}/{H_{m max}}|$')
     ax.set_xlabel('f, ГГц')
     ax.grid() 
     ax.plot(xf/1e9, np.abs(Hf/H_max))
